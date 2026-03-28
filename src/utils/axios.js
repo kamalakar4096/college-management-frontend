@@ -15,7 +15,7 @@ api.interceptors.request.use(
 )
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   (error) => {
     return Promise.reject(error.response?.data || error)
   }
