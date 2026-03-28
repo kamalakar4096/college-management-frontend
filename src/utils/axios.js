@@ -1,14 +1,13 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
-    console.log('REQUEST:', config.url, 'TOKEN:', token ? 'exists' : 'MISSING')
     if (token) config.headers.Authorization = `Bearer ${token}`
     return config
   },
@@ -18,7 +17,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.log('API ERROR:', error.config?.url, error.response?.status, JSON.stringify(error.response?.data))
     return Promise.reject(error.response?.data || error)
   }
 )
