@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
     
-    console.log('RAW RES:', JSON.stringify(res))
+    console.log('FULL RES DATA:', JSON.stringify(res.data))
     
     const loginData = res?.data?.data || res?.data || res
     
