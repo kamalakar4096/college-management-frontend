@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   Box, Card, CardContent, Typography, Button, TextField, Grid,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Chip, List, ListItem, ListItemText, Divider
+  Chip, List, ListItem, ListItemText, Divider, MenuItem
 } from '@mui/material'
 import { Add, Assignment, People } from '@mui/icons-material'
 import { PageHeader, ErrorAlert, LoadingScreen } from '../../components/common'
@@ -15,8 +15,11 @@ import toast from 'react-hot-toast'
 
 export default function FacultyAssignments() {
   const { user } = useAuth()
-  const { data: assignments, loading, error, refetch } = useApi(() => user?.userId ? assignmentService.getByFaculty(user.id) : Promise.resolve([]), [user?.userId])
-  const { data: subjects } = useApi(() => user?.userId ? subjectService.getByFaculty(user.id) : Promise.resolve([]), [user?.userId])
+  const { data: assignmentsData, loading, error, refetch } = useApi(() => assignmentService.getByFaculty(user?.id) , [user?.id])
+const assignments = assignmentsData?.data || assignmentsData || []
+
+const { data: subjectsData } = useApi(() => subjectService.getMySubjects(), [])
+const subjects = subjectsData?.data || subjectsData || []
   const [open, setOpen] = useState(false)
   const [viewSubmissions, setViewSubmissions] = useState(null)
   const [submissions, setSubmissions] = useState([])

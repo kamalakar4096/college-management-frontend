@@ -14,8 +14,8 @@ import { useAuth } from '../../context/AuthContext'
 export default function StudentDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: marks } = useApi(() => user?.userId ? marksService.getByStudent(user.id) : Promise.resolve([]), [user?.userId])
-  const { data: attendance } = useApi(() => user?.userId ? attendanceService.getByStudent(user.id) : Promise.resolve([]), [user?.userId])
+  const { data: marks } = useApi(() => user?.id ? marksService.getByStudent(user.id) : Promise.resolve([]), [user?.id])
+  const { data: attendance } = useApi(() => user?.id ? attendanceService.getByStudent(user.id) : Promise.resolve([]), [user?.id])
   const { data: notifications } = useApi(notificationService.getForMyRole)
 
   const presentCount = attendance?.filter(a => a.status === 'PRESENT').length || 0

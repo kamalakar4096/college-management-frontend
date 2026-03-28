@@ -5,6 +5,7 @@ export const subjectService = {
   getById: (id) => api.get(`/subjects/${id}`).then(r => r.data),
   getByDepartment: (deptId) => api.get(`/subjects/department/${deptId}`).then(r => r.data),
   getByFaculty: (facultyId) => api.get(`/subjects/faculty/${facultyId}`).then(r => r.data),
+  getMySubjects: () => api.get('/subjects/my-subjects').then(r => r.data),  // ✅ NEW
   create: (data) => api.post('/subjects', data).then(r => r.data),
   update: (id, data) => api.put(`/subjects/${id}`, data).then(r => r.data),
   assignFaculty: (subjectId, facultyId) => api.put(`/subjects/${subjectId}/assign-faculty/${facultyId}`).then(r => r.data),

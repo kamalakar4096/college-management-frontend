@@ -4,7 +4,7 @@ import {
   TextField, MenuItem, Grid, IconButton, Tooltip, Typography,
   Card, CardContent, InputAdornment
 } from '@mui/material'
-import { Add, Edit, Block, CheckCircle, Search, People } from '@mui/icons-material'
+import { Add, Edit, Block, CheckCircle, Search } from '@mui/icons-material'
 import { PageHeader, DataTable, RoleChip, StatusChip, UserAvatar, ErrorAlert } from '../../components/common'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import { useApi } from '../../hooks/useApi'
@@ -13,8 +13,12 @@ import { departmentService } from '../../services/departmentService'
 import toast from 'react-hot-toast'
 
 const ROLES = ['DEAN', 'HOD', 'FACULTY', 'STUDENT']
+const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8]
 
-const INITIAL_FORM = { name: '', email: '', password: '', phone: '', role: '', departmentId: '' }
+const INITIAL_FORM = {
+  name: '', email: '', password: '', phone: '',
+  role: '', departmentId: '', semester: '', branch: ''
+}
 
 export default function ManageUsers() {
   const { data: users, loading, error, refetch } = useApi(userService.getAll)
@@ -28,7 +32,13 @@ export default function ManageUsers() {
   const openCreate = () => { setForm(INITIAL_FORM); setEditUser(null); setOpen(true) }
   const openEdit = (u) => {
     setEditUser(u)
-    setForm({ name: u.name, email: u.email, password: '', phone: u.phone || '', role: u.role, departmentId: u.departmentId || '' })
+    setForm({
+      name: u.name, email: u.email, password: '',
+      phone: u.phone || '', role: u.role,
+      departmentId: u.departmentId || '',
+      semester: u.semester || '',
+      branch: u.branch || ''
+    })
     setOpen(true)
   }
 
@@ -36,14 +46,37 @@ export default function ManageUsers() {
     if (!form.name || !form.email || !form.role || (!editUser && !form.password)) {
       toast.error('Please fill all required fields'); return
     }
+    // ✅ Validate semester and branch for students
+    if (form.role === 'STUDENT' && !editUser) {
+      if (!form.semester) { toast.error('Please select semester for student'); return }
+      if (!form.branch) { toast.error('Please enter branch for student'); return }
+    }
     setSaving(true)
     try {
       if (editUser) {
-        await userService.update(editUser.id, { name: form.name, phone: form.phone, departmentId: form.departmentId || undefined })
+        const updatePayload = {
+          name: form.name,
+          phone: form.phone,
+          departmentId: form.departmentId || undefined,
+        }
+        // ✅ Include semester and branch on edit if student
+        if (editUser.role === 'STUDENT') {
+          if (form.semester) updatePayload.semester = Number(form.semester)
+          if (form.branch) updatePayload.branch = form.branch
+        }
+        await userService.update(editUser.id, updatePayload)
         toast.success('User updated')
       } else {
-        const payload = { name: form.name, email: form.email, password: form.password, phone: form.phone, role: form.role }
+        const payload = {
+          name: form.name, email: form.email,
+          password: form.password, phone: form.phone, role: form.role
+        }
         if (form.departmentId) payload.departmentId = Number(form.departmentId)
+        // ✅ Add semester and branch for students
+        if (form.role === 'STUDENT') {
+          payload.semester = Number(form.semester)
+          payload.branch = form.branch
+        }
         await userService.create(payload)
         toast.success('User created')
       }
@@ -83,14 +116,30 @@ export default function ManageUsers() {
     { field: 'phone', headerName: 'Phone' },
     { field: 'role', headerName: 'Role', renderCell: ({ value }) => <RoleChip role={value} /> },
     { field: 'departmentName', headerName: 'Department' },
+    // ✅ NEW columns
+    {
+      field: 'semester', headerName: 'Semester',
+      renderCell: ({ row }) => row.role === 'STUDENT' && row.semester
+        ? <Typography fontSize={13}>Sem {row.semester}</Typography>
+        : <Typography fontSize={12} color="text.secondary">—</Typography>
+    },
+    {
+      field: 'branch', headerName: 'Branch',
+      renderCell: ({ row }) => row.role === 'STUDENT' && row.branch
+        ? <Typography fontSize={13}>{row.branch}</Typography>
+        : <Typography fontSize={12} color="text.secondary">—</Typography>
+    },
     { field: 'active', headerName: 'Status', renderCell: ({ value }) => <StatusChip active={value} /> },
     {
       field: 'actions', headerName: 'Actions',
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip title="Edit"><IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton></Tooltip>
+          <Tooltip title="Edit">
+            <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
+          </Tooltip>
           <Tooltip title={row.active ? 'Deactivate' : 'Activate'}>
-            <IconButton size="small" onClick={() => handleToggle(row)} sx={{ color: row.active ? '#e94560' : '#00b894' }}>
+            <IconButton size="small" onClick={() => handleToggle(row)}
+              sx={{ color: row.active ? '#e94560' : '#00b894' }}>
               {row.active ? <Block fontSize="small" /> : <CheckCircle fontSize="small" />}
             </IconButton>
           </Tooltip>
@@ -98,6 +147,9 @@ export default function ManageUsers() {
       )
     }
   ]
+
+  // ✅ Check if current role is student
+  const isStudent = form.role === 'STUDENT' || editUser?.role === 'STUDENT'
 
   return (
     <DashboardLayout>
@@ -139,30 +191,51 @@ export default function ManageUsers() {
         <DialogContent sx={{ pt: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Full Name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              <TextField fullWidth label="Full Name *" value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <TextField fullWidth label="Phone" value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })} />
             </Grid>
             {!editUser && <>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Email *" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                <TextField fullWidth label="Email *" type="email" value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Password *" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+                <TextField fullWidth label="Password *" type="password" value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth select label="Role *" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+                <TextField fullWidth select label="Role *" value={form.role}
+                  onChange={e => setForm({ ...form, role: e.target.value, semester: '', branch: '' })}>
                   {ROLES.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
                 </TextField>
               </Grid>
             </>}
             <Grid item xs={12} sm={editUser ? 12 : 6}>
-              <TextField fullWidth select label="Department" value={form.departmentId} onChange={e => setForm({ ...form, departmentId: e.target.value })}>
+              <TextField fullWidth select label="Department" value={form.departmentId}
+                onChange={e => setForm({ ...form, departmentId: e.target.value })}>
                 <MenuItem value="">None</MenuItem>
                 {departments?.map(d => <MenuItem key={d.id} value={d.id}>{d.departmentName}</MenuItem>)}
               </TextField>
             </Grid>
+
+            {/* ✅ Show semester and branch ONLY for students */}
+            {isStudent && <>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth select label="Semester *" value={form.semester}
+                  onChange={e => setForm({ ...form, semester: e.target.value })}>
+                  {SEMESTERS.map(s => <MenuItem key={s} value={s}>Semester {s}</MenuItem>)}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Branch *" value={form.branch}
+                  onChange={e => setForm({ ...form, branch: e.target.value })}
+                  placeholder="e.g. Computer Science" />
+              </Grid>
+            </>}
           </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>

@@ -12,14 +12,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const storedToken = localStorage.getItem('token')
       const storedUser = localStorage.getItem('user')
-      console.log('INIT - token:', storedToken)
-      console.log('INIT - user:', storedUser)
       if (storedToken && storedUser) {
         setToken(storedToken)
         setUser(JSON.parse(storedUser))
       }
     } catch (e) {
-      console.log('INIT ERROR:', e)
       localStorage.clear()
     } finally {
       setLoading(false)
@@ -28,22 +25,22 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
-    console.log('RAW LOGIN RES:', JSON.stringify(res))
 
-    const loginData = res.data || res
-    console.log('LOGIN DATA:', JSON.stringify(loginData))
+    // ✅ Handle ApiResponse wrapper: { success, data: { accessToken, userId, ... } }
+    const loginData = res.data?.data || res.data || res
 
     const accessToken = loginData.accessToken
+
     const userData = {
-      userId: loginData.userId,
+      id: loginData.userId,          // ✅ use 'id' not 'userId'
+      userId: loginData.userId,      // keep for backward compat
       name: loginData.name,
       email: loginData.email,
       role: loginData.role,
       departmentId: loginData.departmentId,
     }
 
-    console.log('TOKEN:', accessToken)
-    console.log('USER:', JSON.stringify(userData))
+    console.log('USER after login:', JSON.stringify(userData))
 
     localStorage.setItem('token', accessToken)
     localStorage.setItem('user', JSON.stringify(userData))

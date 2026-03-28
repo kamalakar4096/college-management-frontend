@@ -25,10 +25,11 @@ export default function FacultyAttendance() {
   const [attendance, setAttendance] = useState({})
   const [saving, setSaving] = useState(false)
 
-  const { data: subjects } = useApi(() => user?.userId ? subjectService.getByFaculty(user.id) : Promise.resolve([]), [user?.userId])
-  const { data: deptUsers } = useApi(() => user?.departmentId ? userService.getByDepartment(user.departmentId) : Promise.resolve([]), [user?.departmentId])
+  const { data: subjects } = useApi(() => subjectService.getMySubjects(), [])
+  const { data: studentsData } = useApi(() => user?.departmentId ? 
+  userService.getStudentsByDepartment(user.departmentId) : Promise.resolve([]), [user?.departmentId])
 
-  const students = deptUsers?.filter(u => u.role === 'STUDENT') || []
+const students = studentsData?.data || studentsData || []
 
   const handleStatusChange = (studentId, status) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }))

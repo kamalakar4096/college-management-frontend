@@ -18,8 +18,8 @@ const EXAM_COLORS = {
 export default function StudentMarks() {
   const { user } = useAuth()
   const { data: marks, loading, error } = useApi(
-    () => user?.userId ? marksService.getByStudent(user.id) : Promise.resolve([]),
-    [user?.userId]
+    () => user?.id ? marksService.getByStudent(user.id) : Promise.resolve([]),
+    [user?.id]
   )
 
   const avg = marks?.length > 0 ? (marks.reduce((s, m) => s + m.marks, 0) / marks.length).toFixed(1) : 0
