@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     
     console.log('FULL RES DATA:', JSON.stringify(res.data))
     
-    const loginData = res?.data?.data || res?.data || res
+    const loginData = res?.data?.data
     
     console.log('LOGIN DATA:', JSON.stringify(loginData))
     console.log('NAME:', loginData.name)
