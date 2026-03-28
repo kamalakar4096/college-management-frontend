@@ -25,22 +25,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
-
-    // ✅ Handle ApiResponse wrapper: { success, data: { accessToken, userId, ... } }
+    
+    console.log('RAW RES:', JSON.stringify(res))
+    
     const loginData = res?.data || res
-
+    
+    console.log('LOGIN DATA:', JSON.stringify(loginData))
+    console.log('NAME:', loginData.name)
+    console.log('ROLE:', loginData.role)
+    
     const accessToken = loginData.accessToken
 
     const userData = {
-      id: loginData.userId,          // ✅ use 'id' not 'userId'
-      userId: loginData.userId,      // keep for backward compat
+      id: loginData.userId,
+      userId: loginData.userId,
       name: loginData.name,
       email: loginData.email,
       role: loginData.role,
       departmentId: loginData.departmentId,
     }
-
-    console.log('USER after login:', JSON.stringify(userData))
 
     localStorage.setItem('token', accessToken)
     localStorage.setItem('user', JSON.stringify(userData))
