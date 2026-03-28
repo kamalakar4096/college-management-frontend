@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/auth/login', { email, password })
 
     // ✅ Handle ApiResponse wrapper: { success, data: { accessToken, userId, ... } }
-    const loginData = res.data?.data || res.data || res
+    const loginData = res?.data || res
 
     const accessToken = loginData.accessToken
 
